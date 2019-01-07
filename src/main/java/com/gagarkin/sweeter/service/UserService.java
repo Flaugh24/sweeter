@@ -36,7 +36,7 @@ public class UserService implements UserDetailsService {
 
         String hashPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
         user.setPassword(hashPassword);
-        user.setActive(true);
+        user.setActive(false);
         user.setRoles(Collections.singleton(Role.USER));
         user.setActivationCode(UUID.randomUUID().toString());
 
@@ -65,6 +65,8 @@ public class UserService implements UserDetailsService {
             user.setActive(true);
 
             userRepository.save(user);
+
+            return true;
         }
 
         return false;

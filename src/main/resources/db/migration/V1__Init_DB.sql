@@ -1,8 +1,8 @@
-CREATE SEQUENCE hibernate_sequence START 1 INCREMENT 1;
+CREATE SEQUENCE hibernate_sequence;
 
 CREATE TABLE message
 (
-  id      INT8 NOT NULL,
+  id      SERIAL8,
   file    VARCHAR(255),
   tag     VARCHAR(255),
   text    VARCHAR,
@@ -12,13 +12,13 @@ CREATE TABLE message
 
 CREATE TABLE user_role
 (
-  user_id INT8 NOT NULL,
+  user_id SERIAL8 NOT NULL,
   roles   VARCHAR(255)
 );
 
 CREATE TABLE usr
 (
-  id              INT8    NOT NULL,
+  id              SERIAL8,
   activation_code VARCHAR(255),
   active          BOOLEAN NOT NULL,
   email           VARCHAR(255),
