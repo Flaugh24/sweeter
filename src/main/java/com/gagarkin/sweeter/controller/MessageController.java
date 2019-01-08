@@ -9,16 +9,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Log4j2
 @Controller
@@ -70,5 +68,46 @@ public class MessageController {
         model.addAttribute("messages", messageService.findAll());
 
         return "redirect:/messages";
+    }
+
+    @GetMapping("/user/{user}")
+    public String userMessages(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable User user,
+            Model model,
+            @RequestParam(required = false) Message message
+    ) {
+        Set<Message> messages = user.getMessages();
+
+        model.addAttribute("messages", messages);
+        model.addAttribute("message", message);
+        model.addAttribute("isCurrentUser", currentUser.equals(user));
+
+        return "userMessages";
+    }
+
+    @PostMapping("/user/{user}")
+    public String updateMessage(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable Long user,
+            @RequestParam("id") Message message,
+            @RequestParam("text") String text,
+            @RequestParam("tag") String tag,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+
+        if (message.getAuthor() != null && message.getAuthor().equals(currentUser)) {
+            if (!text.isBlank()) {
+                message.setText(text);
+            }
+
+            if (!tag.isBlank()) {
+                message.setTag(tag);
+            }
+
+            messageService.updateMessage(message, file);
+        }
+
+        return "redirect:/messages/user/" + user;
     }
 }

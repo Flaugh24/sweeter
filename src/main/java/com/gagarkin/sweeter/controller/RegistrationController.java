@@ -27,7 +27,7 @@ public class RegistrationController {
     private final UserService userService;
     private final RestTemplate restTemplate;
 
-    @Value("${recaptcha.secret")
+    @Value("${recaptcha.secret}")
     private String recaptchaSecret;
 
     @Autowired

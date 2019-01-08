@@ -30,6 +30,11 @@ public class MessageService {
 
     public void addMessage(Message message, User author, MultipartFile file) throws IOException {
         message.setAuthor(author);
+        saveFile(message, file);
+        messageRepository.save(message);
+    }
+
+    private void saveFile(Message message, MultipartFile file) throws IOException {
         if (file != null && !file.getOriginalFilename().isBlank()) {
             File uploadDir = new File(uploadPath);
             if (!uploadDir.exists())
@@ -43,6 +48,10 @@ public class MessageService {
 
             file.transferTo(new File(uploadPath + "/" + resultFilename));
         }
+    }
+
+    public void updateMessage(Message message, MultipartFile file) throws IOException {
+        saveFile(message, file);
         messageRepository.save(message);
     }
 
