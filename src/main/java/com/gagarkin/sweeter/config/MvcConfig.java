@@ -2,7 +2,9 @@ package com.gagarkin.sweeter.config;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -14,6 +16,11 @@ public class MvcConfig implements WebMvcConfigurer {
 
     @Value("${upload.path}")
     private String uploadPath;
+
+    @Bean
+    public RestTemplate getRestTemplate(){
+        return new RestTemplate();
+    }
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
