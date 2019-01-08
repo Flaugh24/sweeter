@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,15 +18,17 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final MailService mailService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, MailService mailService) {
+    public UserService(UserRepository userRepository, MailService mailService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.mailService = mailService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username).orElse(null);
+        return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     public boolean addUser(User user) {
@@ -33,8 +36,7 @@ public class UserService implements UserDetailsService {
         if (userFromDb.isPresent())
             return false;
 
-        String hashPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
-        user.setPassword(hashPassword);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setActive(false);
         user.setRoles(Collections.singleton(Role.USER));
         user.setActivationCode(UUID.randomUUID().toString());
@@ -92,9 +94,9 @@ public class UserService implements UserDetailsService {
             user.setActive(false);
         }
 
-        boolean isPasswordChanged = BCrypt.checkpw(password, user.getPassword());
-        if (isPasswordChanged)
-            user.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
+        boolean isPasswordChanged = passwordEncoder.matches(password, user.getPassword());
+        if (!isPasswordChanged)
+            user.setPassword(passwordEncoder.encode(password));
 
         if (isEmailChanged)
             sendMessage(user);

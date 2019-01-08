@@ -1,5 +1,3 @@
-CREATE SEQUENCE hibernate_sequence;
-
 CREATE TABLE message
 (
   id      SERIAL8,
