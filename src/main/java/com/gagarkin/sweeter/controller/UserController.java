@@ -2,6 +2,7 @@ package com.gagarkin.sweeter.controller;
 
 import com.gagarkin.sweeter.domain.Role;
 import com.gagarkin.sweeter.domain.User;
+import com.gagarkin.sweeter.domain.dto.ProfileDto;
 import com.gagarkin.sweeter.service.UserService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +10,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
@@ -27,9 +31,13 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
-    public String users(Model model){
+    public String users(@AuthenticationPrincipal User currentUser,
+                        Model model){
 
-        model.addAttribute("users", userService.findAll());
+        List<User> users = userService.findAll();
+        users.remove(currentUser);
+
+        model.addAttribute("users", users);
 
         return "userList";
     }
@@ -67,10 +75,25 @@ public class UserController {
 
     @PostMapping("profile")
     public String updateProfile(@AuthenticationPrincipal User user,
-                                @RequestParam String password,
-                                @RequestParam String email){
+                                @Valid ProfileDto profileDto,
+                                BindingResult bindingResult,
+                                Model model){
 
-        userService.updateProfile(user, password, email);
+        log.info(profileDto);
+
+        if(!profileDto.getPasswordNew().isBlank() && !profileDto.getPasswordNew().equals(profileDto.getPasswordConfirm()))
+            bindingResult.reject("passwordNewError", "Passwords are different!");
+
+        if(bindingResult.hasErrors()){
+            Map<String, String> errors = ControllerUtils.getErrors(bindingResult);
+            model.mergeAttributes(errors);
+            model.addAttribute("username", user.getUsername());
+            model.addAttribute("email", profileDto.getEmail());
+            return "profile";
+        }
+
+
+        userService.updateProfile(user, profileDto, bindingResult);
 
         return "redirect:/users/profile";
 

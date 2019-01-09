@@ -2,14 +2,20 @@ package com.gagarkin.sweeter.service;
 
 import com.gagarkin.sweeter.domain.Role;
 import com.gagarkin.sweeter.domain.User;
+import com.gagarkin.sweeter.domain.dto.ProfileDto;
 import com.gagarkin.sweeter.repository.UserRepository;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 
+import javax.validation.Valid;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +36,8 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
+
+
 
     public boolean addUser(User user) {
         Optional<User> userFromDb = userRepository.findByUsername(user.getUsername());
@@ -84,24 +92,35 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public void updateProfile(User user, String password, String email) {
+    public void updateProfile(User user, @Valid ProfileDto profileDto, BindingResult bindingResult) {
 
-        String userEmail = user.getEmail();
-        boolean isEmailChanged = email != null && !email.equals(userEmail) || userEmail != null && userEmail.equals(email);
-        if (isEmailChanged) {
-            user.setEmail(email);
-            user.setActivationCode(UUID.randomUUID().toString());
-            user.setActive(false);
+        boolean correctPassword = passwordEncoder.matches(profileDto.getPassword(), user.getPassword());
+        if(!correctPassword){
+            bindingResult.reject("passwordError", "Bad credentials");
+            return;
         }
 
-        boolean isPasswordChanged = passwordEncoder.matches(password, user.getPassword());
-        if (!isPasswordChanged)
-            user.setPassword(passwordEncoder.encode(password));
 
-        if (isEmailChanged)
+        boolean isEmailChanged = !profileDto.getEmail().equals(user.getEmail());
+        if(isEmailChanged){
+            user.setEmail(profileDto.getEmail());
+        }
+
+        boolean isPasswordChanged = !profileDto.getPassword().equals(profileDto.getPasswordNew());
+
+        if(isPasswordChanged){
+            user.setPassword(passwordEncoder.encode(profileDto.getPasswordNew()));
+        }
+
+        if(isEmailChanged || isPasswordChanged){
+            user.setActive(false);
+            user.setActivationCode(UUID.randomUUID().toString());
             sendMessage(user);
+            userRepository.save(user);
+        }
 
-        userRepository.save(user);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
     }
 
@@ -129,4 +148,7 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    public void updateProfile(User user, ProfileDto profileDto) {
+
+    }
 }
