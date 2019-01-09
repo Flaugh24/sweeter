@@ -2,6 +2,7 @@ package com.gagarkin.sweeter.controller;
 
 import com.gagarkin.sweeter.domain.Message;
 import com.gagarkin.sweeter.domain.User;
+import com.gagarkin.sweeter.domain.dto.MessageDto;
 import com.gagarkin.sweeter.service.MessageService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.io.IOException;
@@ -36,13 +40,14 @@ public class MessageController {
     @GetMapping
     public String messages(@RequestParam(required = false) String filter,
                            Model model,
-                           @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable) {
+                           @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable,
+                           @AuthenticationPrincipal User user) {
 
-        Page<Message> page;
+        Page<MessageDto> page;
         if (filter == null || filter.isBlank())
-            page = messageService.findAll(pageable);
+            page = messageService.findAll(user, pageable);
         else
-            page = messageService.findByTag(filter,pageable);
+            page = messageService.findByTag(filter,user, pageable);
 
         model.addAttribute("page", page);
         model.addAttribute("url", "/messages");
@@ -66,7 +71,7 @@ public class MessageController {
             Map<String, String> errors = ControllerUtils.getErrors(bindingResult);
             model.mergeAttributes(errors);
             model.addAttribute("message", message);
-            model.addAttribute("page", messageService.findAll(pageable));
+            model.addAttribute("page", messageService.findAll(user, pageable));
             model.addAttribute("url", "/messages");
 
             return "main";
@@ -85,7 +90,7 @@ public class MessageController {
             @RequestParam(required = false) Message message,
             @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<Message> page = messageService.findByUser(user, pageable);
+        Page<MessageDto> page = messageService.findByUser(user, currentUser, pageable);
 
         model.addAttribute("userChannel", user);
         model.addAttribute("subscriptionsCount", user.getSubscriptions().size());
@@ -94,7 +99,7 @@ public class MessageController {
         model.addAttribute("page", page);
         model.addAttribute("message", message);
         model.addAttribute("isCurrentUser", currentUser.equals(user));
-        model.addAttribute("url", "messages/user/" + user.getId());
+        model.addAttribute("url", user.getId());
 
         return "userMessages";
     }
@@ -121,5 +126,24 @@ public class MessageController {
         }
 
         return "redirect:/messages/user/" + user;
+    }
+
+    @GetMapping("/{message}/like")
+    public String likeMessage(@AuthenticationPrincipal User currentUser,
+                              @PathVariable Message message,
+                              RedirectAttributes redirectAttributes,
+                              @RequestHeader(required = false) String referer){
+        Set<User> likes = message.getLikes();
+        if(likes.contains(currentUser)){
+            likes.remove(currentUser);
+        }else {
+            likes.add(currentUser);
+        }
+
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(referer).build();
+        uriComponents.getQueryParams()
+                .forEach(redirectAttributes::addAttribute);
+
+        return "redirect:" + uriComponents.getPath();
     }
 }

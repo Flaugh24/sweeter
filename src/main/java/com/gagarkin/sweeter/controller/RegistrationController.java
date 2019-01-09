@@ -1,11 +1,10 @@
 package com.gagarkin.sweeter.controller;
 
 import com.gagarkin.sweeter.domain.User;
-import com.gagarkin.sweeter.dto.CaptchaResponseDto;
+import com.gagarkin.sweeter.domain.dto.CaptchaResponseDto;
 import com.gagarkin.sweeter.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;

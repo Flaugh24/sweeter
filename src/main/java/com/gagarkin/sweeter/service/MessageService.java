@@ -2,6 +2,7 @@ package com.gagarkin.sweeter.service;
 
 import com.gagarkin.sweeter.domain.Message;
 import com.gagarkin.sweeter.domain.User;
+import com.gagarkin.sweeter.domain.dto.MessageDto;
 import com.gagarkin.sweeter.repository.MessageRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,15 +58,15 @@ public class MessageService {
         messageRepository.save(message);
     }
 
-    public Page<Message> findAll(Pageable pageable) {
-        return messageRepository.findAll(pageable);
+    public Page<MessageDto> findAll(User user, Pageable pageable) {
+        return messageRepository.findAll(user, pageable);
     }
 
-    public Page<Message> findByTag(String filter, Pageable pageable) {
-       return messageRepository.findByTag(filter, pageable);
+    public Page<MessageDto> findByTag(String filter, User user, Pageable pageable) {
+       return messageRepository.findByTag(filter, user, pageable);
     }
 
-    public Page<Message> findByUser(User user, Pageable pageable){
-        return messageRepository.findByAuthor(user, pageable);
+    public Page<MessageDto> findByUser(User author, User user, Pageable pageable){
+        return messageRepository.findByUser(author, user, pageable);
     }
 }

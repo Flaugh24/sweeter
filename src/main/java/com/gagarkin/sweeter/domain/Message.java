@@ -6,6 +6,8 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -26,6 +28,14 @@ public class Message {
     @JoinColumn(name = "user_id")
     private User author;
     private String fileName;
+
+    @ManyToMany
+    @JoinTable(
+            name = "message_likes",
+            joinColumns = {@JoinColumn(name = "message_id")},
+            inverseJoinColumns = {@JoinColumn(name = "user_id")}
+    )
+    private Set<User> likes = new HashSet<>();
 
     public Message(User user, String text, String tag) {
         this.author = user;
