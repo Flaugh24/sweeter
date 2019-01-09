@@ -5,6 +5,10 @@ import com.gagarkin.sweeter.domain.User;
 import com.gagarkin.sweeter.service.MessageService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,15 +34,18 @@ public class MessageController {
     }
 
     @GetMapping
-    public String messages(@RequestParam(required = false) String filter, Model model) {
+    public String messages(@RequestParam(required = false) String filter,
+                           Model model,
+                           @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable) {
 
-        List<Message> messages;
+        Page<Message> page;
         if (filter == null || filter.isBlank())
-            messages = messageService.findAll();
+            page = messageService.findAll(pageable);
         else
-            messages = messageService.findByTag(filter);
+            page = messageService.findByTag(filter,pageable);
 
-        model.addAttribute("messages", messages);
+        model.addAttribute("page", page);
+        model.addAttribute("url", "/messages");
         model.addAttribute("filter", filter);
 
         return "main";
@@ -49,7 +56,8 @@ public class MessageController {
                       @Valid Message message,
                       BindingResult bindingResult,
                       Model model,
-                      @RequestParam("file") MultipartFile file) throws IOException {
+                      @RequestParam("file") MultipartFile file,
+                      @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable) throws IOException {
 
         if (bindingResult.hasErrors()) {
 
@@ -58,14 +66,13 @@ public class MessageController {
             Map<String, String> errors = ControllerUtils.getErrors(bindingResult);
             model.mergeAttributes(errors);
             model.addAttribute("message", message);
-            model.addAttribute("messages", messageService.findAll());
+            model.addAttribute("page", messageService.findAll(pageable));
+            model.addAttribute("url", "/messages");
 
             return "main";
         } else {
             messageService.addMessage(message, user, file);
         }
-
-        model.addAttribute("messages", messageService.findAll());
 
         return "redirect:/messages";
     }
@@ -75,17 +82,19 @@ public class MessageController {
             @AuthenticationPrincipal User currentUser,
             @PathVariable User user,
             Model model,
-            @RequestParam(required = false) Message message
-    ) {
-        Set<Message> messages = user.getMessages();
+            @RequestParam(required = false) Message message,
+            @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<Message> page = messageService.findByUser(user, pageable);
 
         model.addAttribute("userChannel", user);
         model.addAttribute("subscriptionsCount", user.getSubscriptions().size());
         model.addAttribute("subscribersCount", user.getSubscribers().size());
         model.addAttribute("isSubscriber", user.getSubscribers().contains(currentUser));
-        model.addAttribute("messages", messages);
+        model.addAttribute("page", page);
         model.addAttribute("message", message);
         model.addAttribute("isCurrentUser", currentUser.equals(user));
+        model.addAttribute("url", "messages/user/" + user.getId());
 
         return "userMessages";
     }
@@ -97,8 +106,7 @@ public class MessageController {
             @RequestParam("id") Message message,
             @RequestParam("text") String text,
             @RequestParam("tag") String tag,
-            @RequestParam("file") MultipartFile file
-    ) throws IOException {
+            @RequestParam("file") MultipartFile file) throws IOException {
 
         if (message.getAuthor() != null && message.getAuthor().equals(currentUser)) {
             if (!text.isBlank()) {
