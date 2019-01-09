@@ -10,9 +10,6 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="/">Home</a>
-            </li>
             <#if user??>
             <li class="nav-item">
                 <a class="nav-link" href="/messages">Messages</a>
@@ -32,9 +29,7 @@
                 </li>
             </#if>
         </ul>
-        <div class="navbar-text mr-3">${username}</div>
-        <#if user??>
+        <div class="navbar-text mr-3"><#if user??>${username}<#else>Please, login</#if></div>
             <div><@l.logout/></div>
-        </#if>
     </div>
 </nav>
