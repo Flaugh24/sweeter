@@ -82,6 +82,21 @@ public class MessageController {
         return "redirect:/messages";
     }
 
+    @GetMapping("/{message}/delete")
+    public String deleteMessage(@PathVariable Message message,
+                              RedirectAttributes redirectAttributes,
+                              @RequestHeader(required = false) String referer){
+
+        messageService.deleteById(message.getId());
+
+        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(referer).build();
+        uriComponents.getQueryParams()
+                .forEach(redirectAttributes::addAttribute);
+
+        return "redirect:" + uriComponents.getPath();
+    }
+
+
     @GetMapping("/user/{user}")
     public String userMessages(
             @AuthenticationPrincipal User currentUser,

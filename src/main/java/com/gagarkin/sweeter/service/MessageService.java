@@ -69,4 +69,8 @@ public class MessageService {
     public Page<MessageDto> findByUser(User author, User user, Pageable pageable){
         return messageRepository.findByUser(author, user, pageable);
     }
+
+    public void deleteById(Long id){
+        messageRepository.deleteById(id);
+    }
 }

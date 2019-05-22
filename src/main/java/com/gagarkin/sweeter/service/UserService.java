@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
 import javax.validation.Valid;
@@ -76,8 +77,7 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
-    public void saveUser(User user, String username, Map<String, String> form) {
-        user.setUsername(username);
+    public void saveUser(User user, Map<String, String> form) {
         Set<String> roles = Arrays.stream(Role.values())
                 .map(Role::name)
                 .collect(Collectors.toSet());
@@ -92,12 +92,11 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public void updateProfile(User user, @Valid ProfileDto profileDto, BindingResult bindingResult) {
+    public boolean updateProfile(User user, @Valid ProfileDto profileDto) {
 
         boolean correctPassword = passwordEncoder.matches(profileDto.getPassword(), user.getPassword());
         if(!correctPassword){
-            bindingResult.reject("passwordError", "Bad credentials");
-            return;
+            return false;
         }
 
 
@@ -122,6 +121,7 @@ public class UserService implements UserDetailsService {
         Authentication authentication = new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        return true;
     }
 
     private void sendMessage(User user) {
@@ -148,7 +148,4 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public void updateProfile(User user, ProfileDto profileDto) {
-
-    }
 }

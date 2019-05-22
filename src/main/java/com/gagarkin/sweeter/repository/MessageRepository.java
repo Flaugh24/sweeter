@@ -39,4 +39,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             "where m.author = :author " +
             "group by m")
     Page<MessageDto> findByUser(@Param("author") User author, @Param("user") User user, Pageable pageable);
+
+    void deleteById(Long id);
 }

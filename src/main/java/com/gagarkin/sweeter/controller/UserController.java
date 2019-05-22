@@ -55,10 +55,9 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
     public String save(@RequestParam("userId") User user,
-                       @RequestParam String username,
                        @RequestParam Map<String, String> form){
 
-        userService.saveUser(user, username, form);
+        userService.saveUser(user, form);
 
 
         return "redirect:/users";
@@ -81,10 +80,18 @@ public class UserController {
 
         log.info(profileDto);
 
-        if(!profileDto.getPasswordNew().isBlank() && !profileDto.getPasswordNew().equals(profileDto.getPasswordConfirm()))
-            bindingResult.reject("passwordNewError", "Passwords are different!");
+        boolean passwordsAreDifferent = !profileDto.getPasswordNew().isBlank() && !profileDto.getPasswordNew().equals(profileDto.getPasswordConfirm());
+        if(passwordsAreDifferent) {
+            model.addAttribute("passwordNewError", "Passwords are different!");
+            model.addAttribute("passwordConfirmError", "Passwords are different!");
+        }
 
-        if(bindingResult.hasErrors()){
+        boolean wrongPassword = userService.updateProfile(user, profileDto);
+        if(!wrongPassword){
+            model.addAttribute("passwordError", "Wrong password!");
+        }
+
+        if(bindingResult.hasErrors() || passwordsAreDifferent || !wrongPassword){
             Map<String, String> errors = ControllerUtils.getErrors(bindingResult);
             model.mergeAttributes(errors);
             model.addAttribute("username", user.getUsername());
@@ -92,8 +99,6 @@ public class UserController {
             return "profile";
         }
 
-
-        userService.updateProfile(user, profileDto, bindingResult);
 
         return "redirect:/users/profile";
 

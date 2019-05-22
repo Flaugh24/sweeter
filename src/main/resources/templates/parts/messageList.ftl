@@ -26,6 +26,9 @@
                     <#if message.author.id == currentUserId>
                     <a class="col btn btn-primary" href="/messages/user/${message.author.id}?message=${message.id}">Edit</a>
                     </#if>
+                    <#if isAdmin || isModerator>
+                        <a class="col align-self-center" href="/messages/${message.id}/delete">X</a>
+                    </#if>
                 </div>
             </div>
         </div>
