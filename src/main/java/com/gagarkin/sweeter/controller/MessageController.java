@@ -44,7 +44,7 @@ public class MessageController {
                            @AuthenticationPrincipal User user) {
 
         Page<MessageDto> page;
-        if (filter == null || filter.isBlank())
+        if (filter == null || filter.isEmpty())
             page = messageService.findAll(user, pageable);
         else
             page = messageService.findByTag(filter,user, pageable);
@@ -129,11 +129,11 @@ public class MessageController {
             @RequestParam("file") MultipartFile file) throws IOException {
 
         if (message.getAuthor() != null && message.getAuthor().equals(currentUser)) {
-            if (!text.isBlank()) {
+            if (!text.isEmpty()) {
                 message.setText(text);
             }
 
-            if (!tag.isBlank()) {
+            if (!tag.isEmpty()) {
                 message.setTag(tag);
             }
 

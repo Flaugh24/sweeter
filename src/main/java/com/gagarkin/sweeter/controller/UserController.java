@@ -80,7 +80,7 @@ public class UserController {
 
         log.info(profileDto);
 
-        boolean passwordsAreDifferent = !profileDto.getPasswordNew().isBlank() && !profileDto.getPasswordNew().equals(profileDto.getPasswordConfirm());
+        boolean passwordsAreDifferent = !profileDto.getPasswordNew().isEmpty() && !profileDto.getPasswordNew().equals(profileDto.getPasswordConfirm());
         if(passwordsAreDifferent) {
             model.addAttribute("passwordNewError", "Passwords are different!");
             model.addAttribute("passwordConfirmError", "Passwords are different!");

@@ -17,7 +17,7 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.gagarkin'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 11
+sourceCompatibility = 8
 
 repositories {
     mavenCentral()
@@ -31,6 +31,8 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-mail')
     implementation('org.springframework.boot:spring-boot-starter-web')
     implementation ('org.springframework.session:spring-session-jdbc:2.1.1.RELEASE')
+    implementation group: 'org.json', name: 'json', version: '20190722'
+
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
     runtimeOnly('org.postgresql:postgresql')
     compileOnly('org.projectlombok:lombok')
